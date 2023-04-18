@@ -10,6 +10,8 @@ public class Simple {
 		int 	c =a+b;
 
 		System.out.print(c);
+		
+		//adding to check github change
 
 	}
 
