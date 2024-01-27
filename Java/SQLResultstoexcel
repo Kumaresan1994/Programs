@@ -1,0 +1,59 @@
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+public class WriteExcel {
+    public static void main(String[] args) throws SQLException, IOException {
+        String url = "jdbc:mysql://localhost:3306/mydatabase";
+        String user = "root";
+        String pwd = "root";
+        Connection connection = DriverManager.getConnection(url, user, pwd);
+        String selectQuery = "SELECT * FROM mytable";
+        ResultSet rs = fetchDataFromDatabase(selectQuery, connection);
+        writeToExcel(rs);
+    }
+
+    private static ResultSet fetchDataFromDatabase(String selectQuery, Connection connection) throws SQLException {
+        Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery(selectQuery);
+        return rs;
+    }
+
+    public static void writeToExcel(ResultSet rs) throws IOException, SQLException {
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        XSSFSheet sheet = workbook.createSheet("Sheet1");
+
+        Row headerRow = sheet.createRow(0);
+        int numColumns = rs.getMetaData().getColumnCount();
+        for (int i = 1; i <= numColumns; i++) {
+            Cell cell = headerRow.createCell(i - 1);
+            cell.setCellValue(rs.getMetaData().getColumnName(i));
+        }
+
+        int rowNum = 1;
+        while (rs.next()) {
+            Row row = sheet.createRow(rowNum++);
+            for (int i = 1; i <= numColumns; i++) {
+                Cell cell = row.createCell(i - 1);
+                cell.setCellValue(rs.getString(i));
+            }
+        }
+
+        try {
+            FileOutputStream outputStream = new FileOutputStream("output.xlsx");
+            workbook.write(outputStream);
+            workbook.close();
+            System.out.println("Excel file written successfully.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
