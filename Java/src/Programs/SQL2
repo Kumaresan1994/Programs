@@ -1,47 +1,65 @@
-import java.sql.*;
+import java.io.FileOutputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
 
 public class SQLToExcel {
-    public static void main(String[] args) {
-        String url = "your_database_url";
-        String user = "your_username";
-        String password = "your_password";
-        String sql = "your_sql_query";
+    @DataProvider(name = "sqlQueries")
+    public Object[][] sqlQueries() {
+        return new Object[][] {
+            {"SELECT * FROM mytable1"},
+            {"SELECT * FROM mytable2"},
+            // Add more queries as needed
+        };
+    }
 
-        try (Connection connection = DriverManager.getConnection(url, user, password);
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(sql)) {
+    @Test(dataProvider = "sqlQueries")
+    public void testQueries(String query) throws Exception {
+        // Database connection
+        String dbURL = "jdbc:mysql://localhost:3306/mydatabase";
+        String username = "root";
+        String password = "password";
+        Connection conn = DriverManager.getConnection(dbURL, username, password);
 
-            Workbook workbook = new XSSFWorkbook();
-            Sheet sheet = workbook.createSheet("SQL Results");
+        // SQL Query
+        Statement statement = conn.createStatement();
+        ResultSet resultSet = statement.executeQuery(query);
 
-            // Write header
-            ResultSetMetaData metaData = resultSet.getMetaData();
-            Row headerRow = sheet.createRow(0);
-            for (int i = 1; i <= metaData.getColumnCount(); i++) {
-                Cell headerCell = headerRow.createCell(i - 1);
-                headerCell.setCellValue(metaData.getColumnName(i));
-            }
+        // New workbook and worksheet
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Database Output");
 
-            // Write data
-            int rowIndex = 1;
-            while (resultSet.next()) {
-                Row row = sheet.createRow(rowIndex++);
-                for (int i = 1; i <= metaData.getColumnCount(); i++) {
-                    Cell cell = row.createCell(i - 1);
-                    cell.setCellValue(resultSet.getString(i));
-                }
-            }
-
-            // Write to file
-            try (FileOutputStream outputStream = new FileOutputStream("SQLResults.xlsx")) {
-                workbook.write(outputStream);
-            }
-
-            workbook.close();
-        } catch (SQLException | IOException e) {
-            e.printStackTrace();
+        // Iterate through the data and write it out to the Excel file
+        int rowCount = 0;
+        while (resultSet.next()) {
+            Row row = sheet.createRow(++rowCount);
+            writeBook(resultSet, row);
         }
+
+        // Close the result set, statement, and the connection
+        resultSet.close();
+        statement.close();
+        conn.close();
+
+        // Write to the Excel file
+        try (FileOutputStream outputStream = new FileOutputStream("DatabaseOutput.xlsx")) {
+            workbook.write(outputStream);
+        }
+        workbook.close();
+    }
+
+    private static void writeBook(ResultSet resultSet, Row row) throws Exception {
+        Cell cell = row.createCell(1);
+        cell.setCellValue(resultSet.getString("column1"));
+
+        cell = row.createCell(2);
+        cell.setCellValue(resultSet.getString("column2"));
+
+        // Add cells for each column of data needed
     }
 }
