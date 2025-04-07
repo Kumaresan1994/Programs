@@ -1,0 +1,79 @@
+{
+  "nodes": [
+    {
+      "id": "Webhook_Deployment_Trigger",
+      "name": "Deployment Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [300, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "deployment-success",
+        "responseMode": "lastNode",
+        "responseData": {
+          "responseDataType": "json",
+          "responseBody": "{\"message\":\"Deployment received\"}"
+        }
+      },
+      "webhookId": "deployment-success"
+    },
+    {
+      "id": "Set_Test_Template",
+      "name": "Generate Test Case",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [600, 300],
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "Feature",
+              "value": "Login"
+            },
+            {
+              "name": "TestCaseTitle",
+              "value": "Verify login with valid credentials"
+            },
+            {
+              "name": "Steps",
+              "value": "1. Open login page\n2. Enter valid credentials\n3. Submit"
+            },
+            {
+              "name": "ExpectedResult",
+              "value": "User should see the dashboard"
+            },
+            {
+              "name": "Environment",
+              "value": "={{$json.env || 'staging'}}"
+            },
+            {
+              "name": "BuildVersion",
+              "value": "={{$json.version || 'v1.2.3'}}"
+            },
+            {
+              "name": "CreatedAt",
+              "value": "={{new Date().toISOString()}}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook_Deployment_Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set_Test_Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "versionId": "1"
+}
