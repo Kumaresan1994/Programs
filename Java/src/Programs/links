@@ -2,3 +2,20 @@ https://github.blog/ai-and-ml/github-copilot/modernizing-legacy-code-with-github
 
 
 https://youtu.be/wUMiwa2xsJs?si=NnBATK74TwxbMOK1
+
+
+const allItems = $('Convert to string').all();
+
+let combinedText = '';
+
+for (const item of allItems) {
+  combinedText += item.json.data + '\n'; // change this to fit your format
+}
+
+return [
+  {
+    json: {
+      fileData: combinedText
+    }
+  }
+];
