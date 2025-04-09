@@ -19,3 +19,13 @@ return [
     }
   }
 ];
+
+return {
+  "model": "gpt-4o-mini",
+  "messages": [
+    {
+      "role": "assistant",
+      "content": "get data from " + $json.message.content + " > B[Create Flow Chart];\nB --> C[Visualize Steps];\nC --> D[Use Boxes, Arrows, Symbols];"
+    }
+  ]
+};
