@@ -29,3 +29,13 @@ return {
     }
   ]
 };
+_-----
+return {
+  model: "gpt-4o-mini",
+  messages: [
+    {
+      role: "user",
+      content: `get the data from ${$json.data.replace(/\n/g, "\\n").replace(/"/g, '\\"')} > B[Create Flow Chart];\nB --> C[Visualize Steps];\nC --> D[Use Boxes, Arrows, Symbols];`
+    }
+  ]
+};
