@@ -1,0 +1,27 @@
+Sure! Here's the updated prompt that works for any file types (not just HTML, CSS, or JS):
+
+
+---
+
+Generalized Prompt for Creating a Graph or Mind Map of Any Project Files:
+
+> Create a mind map or visual graph that represents the structure and contents of a software project.
+
+Start with the project root as the central node.
+
+Group files by their file type/extension (e.g., .html, .css, .js, .py, .json, etc.).
+
+Under each file type, list the individual file names.
+
+For each file, include its key components (e.g., for code files: functions, classes, or main logic; for config files: keys or settings).
+
+
+This structure should allow anyone to quickly understand the layout and purpose of the project just by viewing the graph.
+
+
+
+
+---
+
+Let me know if you'd like a version tailored for Mermaid, Graphviz, or a drawing-style generator.
+
