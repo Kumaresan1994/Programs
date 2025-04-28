@@ -1,73 +1,68 @@
-https://github.blog/ai-and-ml/github-copilot/modernizing-legacy-code-with-github-copilot-tips-and-examples/
+public GlobalSearchPage sortingSearchColumns(String searchLists, String columnName, String dbColumn, String sortOrder) {
+    String sortedValueUI = null;
 
-https://qeaglecom-my.sharepoint.com/personal/nirmal_chandrasekar_testleaf_com/_layouts/15/stream.aspx?id=%2Fpersonal%2Fnirmal%5Fchandrasekar%5Ftestleaf%5Fcom%2FDocuments%2FDocuments%2FNirmal%27s%20Files%2FWebinars%2FLearn%20How%20to%20Scale%201000%2B%20Selenium%20Tests%20in%20Under%2030%20Minutes%2Emp4&nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&ga=1&referrer=StreamWebApp%2EWeb&referrerScenario=AddressBarCopied%2Eview%2Eee831b15%2D7525%2D424a%2D8ebc%2D80d5ef2e86d3
-https://youtu.be/wUMiwa2xsJs?si=NnBATK74TwxbMOK1
+    pause(2000);
 
+    WebElement sortColumn = locateElement(Locators.XPATH, "//div[@col-id='" + columnName + "' and @role='columnheader']");
 
-const allItems = $('Convert to string').all();
+    List<WebElement> columnData = locateElements(Locators.XPATH, "//div[@col-id='" + columnName + "']//span[@class='ag-cell-value']");
 
-let combinedText = '';
-
-for (const item of allItems) {
-  combinedText += item.json.data + '\n'; // change this to fit your format
-}
-
-return [
-  {
-    json: {
-      fileData: combinedText
+    for (WebElement sortData : columnData) {
+        sortedValueUI = sortData.getText();
+        System.out.println(sortedValueUI);
+        break;
     }
-  }
-];
 
-return {
-  "model": "gpt-4o-mini",
-  "messages": [
-    {
-      "role": "assistant",
-      "content": "get data from " + $json.message.content + " > B[Create Flow Chart];\nB --> C[Visualize Steps];\nC --> D[Use Boxes, Arrows, Symbols];"
-    }
-  ]
-};
-_-----
-return {
-  model: "gpt-4o-mini",
-  messages: [
-    {
-      role: "user",
-      content: `get the data from ${$json.data.replace(/\n/g, "\\n").replace(/"/g, '\\"')} > B[Create Flow Chart];\nB --> C[Visualize Steps];\nC --> D[Use Boxes, Arrows, Symbols];`
-    }
-  ]
-};
+    String valuesFromDB = getDBValues(searchLists, dbColumn, sortOrder);
+    System.out.println(valuesFromDB);
 
-------
-{
-  "model": "gpt-4o-mini",
-  "messages": [
-    {
-      "role": "user",
-      "content": "get the data from {{$json.data}} > B[Create Flow Chart];\nB --> C[Visualize Steps];\nC --> D[Use Boxes, Arrows, Symbols];"
+    // Remove "AM"/"PM" and fractional seconds properly
+    sortedValueUI = sortedValueUI.replace(" AM", "").replace(" PM", "");
+    if (sortedValueUI.contains(".")) {
+        sortedValueUI = sortedValueUI.split("\\.")[0];
     }
-  ]
-}
 
----
-JSON.stringify({
-  model: "gpt-4o-mini",
-  messages: [
-    {
-      role: "user",
-      content: `get the data from ${$json.data.replace(/\n/g, "\\n").replace(/"/g, '\\"')} > B[Create Flow Chart];\nB --> C[Visualize Steps];\nC --> D[Use Boxes, Arrows, Symbols];`
+    valuesFromDB = valuesFromDB.replace("AM", "").replace("PM", "");
+    if (valuesFromDB.contains(".")) {
+        valuesFromDB = valuesFromDB.split("\\.")[0];
     }
-  ]
-})
----
-{
-  "model": "gpt-4o-mini",
-  "messages": [
-    {
-      "role": "user",
-      "content": "get the data from {{ $json[\"data\"] }} > B[Create Flow Chart];\nB --> C[Visualize Steps];\nC --> D[Use Boxes, Arrows, Symbols];"
+
+    // Define the correct date format
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy h:mm:ss");
+
+    // Parse the date strings into LocalDateTime objects
+    LocalDateTime dateUI = LocalDateTime.parse(sortedValueUI, formatter);
+    LocalDateTime dateDB = LocalDateTime.parse(valuesFromDB, formatter);
+
+    // Compare the dates
+    if (dateUI.equals(dateDB)) {
+        reportStep("Column " + columnName + " sorted in " + sortOrder + " order", "pass");
+    } else {
+        sortColumn.click();
+        pause(2000);
+
+        // Re-fetch the sorted value from the UI after clicking the sort column
+        columnData = locateElements(Locators.XPATH, "//div[@col-id='" + columnName + "']//span[@class='ag-cell-value']");
+
+        for (WebElement sortData : columnData) {
+            sortedValueUI = sortData.getText();
+            System.out.println(sortedValueUI);
+            break;
+        }
+
+        sortedValueUI = sortedValueUI.replace(" AM", "").replace(" PM", "");
+        if (sortedValueUI.contains(".")) {
+            sortedValueUI = sortedValueUI.split("\\.")[0];
+        }
+
+        dateUI = LocalDateTime.parse(sortedValueUI, formatter);
+
+        if (dateUI.equals(dateDB)) {
+            reportStep("Column " + columnName + " sorted in " + sortOrder + " order", "pass");
+        } else {
+            reportStep("Column " + columnName + " not sorted in " + sortOrder + " order", "fail");
+        }
     }
-  ]
+
+    return this;
 }
