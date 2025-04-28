@@ -9,59 +9,66 @@ public GlobalSearchPage sortingSearchColumns(String searchLists, String columnNa
 
     for (WebElement sortData : columnData) {
         sortedValueUI = sortData.getText();
-        System.out.println(sortedValueUI);
+        System.out.println("UI Value: " + sortedValueUI);
         break;
     }
 
     String valuesFromDB = getDBValues(searchLists, dbColumn, sortOrder);
-    System.out.println(valuesFromDB);
+    System.out.println("DB Value: " + valuesFromDB);
 
-    // Remove "AM"/"PM" and fractional seconds properly
-    sortedValueUI = sortedValueUI.replace(" AM", "").replace(" PM", "");
+    // Fix missing space before AM/PM
+    sortedValueUI = sortedValueUI.replaceAll("(?i)(AM|PM)", " $1").trim();
+    valuesFromDB = valuesFromDB.replaceAll("(?i)(AM|PM)", " $1").trim();
+
+    // Remove fractional seconds if any
     if (sortedValueUI.contains(".")) {
         sortedValueUI = sortedValueUI.split("\\.")[0];
     }
-
-    valuesFromDB = valuesFromDB.replace("AM", "").replace("PM", "");
     if (valuesFromDB.contains(".")) {
         valuesFromDB = valuesFromDB.split("\\.")[0];
     }
 
-    // Define the correct date format
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy h:mm:ss");
+    // Define the correct formatter
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy h:mm:ss a");
 
-    // Parse the date strings into LocalDateTime objects
-    LocalDateTime dateUI = LocalDateTime.parse(sortedValueUI, formatter);
-    LocalDateTime dateDB = LocalDateTime.parse(valuesFromDB, formatter);
+    try {
+        // Parse the dates
+        LocalDateTime dateUI = LocalDateTime.parse(sortedValueUI, formatter);
+        LocalDateTime dateDB = LocalDateTime.parse(valuesFromDB, formatter);
 
-    // Compare the dates
-    if (dateUI.equals(dateDB)) {
-        reportStep("Column " + columnName + " sorted in " + sortOrder + " order", "pass");
-    } else {
-        sortColumn.click();
-        pause(2000);
-
-        // Re-fetch the sorted value from the UI after clicking the sort column
-        columnData = locateElements(Locators.XPATH, "//div[@col-id='" + columnName + "']//span[@class='ag-cell-value']");
-
-        for (WebElement sortData : columnData) {
-            sortedValueUI = sortData.getText();
-            System.out.println(sortedValueUI);
-            break;
-        }
-
-        sortedValueUI = sortedValueUI.replace(" AM", "").replace(" PM", "");
-        if (sortedValueUI.contains(".")) {
-            sortedValueUI = sortedValueUI.split("\\.")[0];
-        }
-
-        dateUI = LocalDateTime.parse(sortedValueUI, formatter);
-
+        // Compare the dates
         if (dateUI.equals(dateDB)) {
-            reportStep("Column " + columnName + " sorted in " + sortOrder + " order", "pass");
+            reportStep("Column '" + columnName + "' sorted correctly in " + sortOrder + " order", "pass");
         } else {
-            reportStep("Column " + columnName + " not sorted in " + sortOrder + " order", "fail");
+            sortColumn.click();
+            pause(2000);
+
+            // Re-fetch the sorted value from UI after clicking
+            columnData = locateElements(Locators.XPATH, "//div[@col-id='" + columnName + "']//span[@class='ag-cell-value']");
+            for (WebElement sortData : columnData) {
+                sortedValueUI = sortData.getText();
+                System.out.println("New UI Value after click: " + sortedValueUI);
+                break;
+            }
+
+            // Fix again
+            sortedValueUI = sortedValueUI.replaceAll("(?i)(AM|PM)", " $1").trim();
+            if (sortedValueUI.contains(".")) {
+                sortedValueUI = sortedValueUI.split("\\.")[0];
+            }
+
+            // Parse again
+            dateUI = LocalDateTime.parse(sortedValueUI, formatter);
+
+            if (dateUI.equals(dateDB)) {
+                reportStep("Column '" + columnName + "' sorted correctly in " + sortOrder + " order after clicking", "pass");
+            } else {
+                reportStep("Column '" + columnName + "' NOT sorted correctly in " + sortOrder + " order", "fail");
+            }
         }
+    } catch (Exception e) {
+        e.printStackTrace();
+        reportStep("Failed to parse or compare dates for column '" + columnName + "'", "fail");
     }
 
     return this;
