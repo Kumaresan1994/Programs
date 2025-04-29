@@ -1,75 +1,20 @@
-public GlobalSearchPage sortingSearchColumns(String searchLists, String columnName, String dbColumn, String sortOrder) {
-    String sortedValueUI = null;
+// Step 1: Retrieve column values
+List<WebElement> elementsBeforeSort = getDriver()
+    .findElements(By.xpath("//div[@id='program']//span[@class='ag-cell-value']"));
 
-    pause(2000);
+// Step 2: Extract text from each element
+List<String> columnValues = new ArrayList<>();
+for (WebElement element : elementsBeforeSort) {
+    columnValues.add(element.getText().trim()); // trim to avoid leading spaces
+}
 
-    WebElement sortColumn = locateElement(Locators.XPATH, "//div[@col-id='" + columnName + "' and @role='columnheader']");
+// Step 3: Create a sorted copy of the column values
+List<String> sortedColumnValues = new ArrayList<>(columnValues);
+Collections.sort(sortedColumnValues, String.CASE_INSENSITIVE_ORDER); // or use Comparator.naturalOrder()
 
-    List<WebElement> columnData = locateElements(Locators.XPATH, "//div[@col-id='" + columnName + "']//span[@class='ag-cell-value']");
-
-    for (WebElement sortData : columnData) {
-        sortedValueUI = sortData.getText();
-        System.out.println("UI Value: " + sortedValueUI);
-        break;
-    }
-
-    String valuesFromDB = getDBValues(searchLists, dbColumn, sortOrder);
-    System.out.println("DB Value: " + valuesFromDB);
-
-    // Fix missing space before AM/PM
-    sortedValueUI = sortedValueUI.replaceAll("(?i)(AM|PM)", " $1").trim();
-    valuesFromDB = valuesFromDB.replaceAll("(?i)(AM|PM)", " $1").trim();
-
-    // Remove fractional seconds if any
-    if (sortedValueUI.contains(".")) {
-        sortedValueUI = sortedValueUI.split("\\.")[0];
-    }
-    if (valuesFromDB.contains(".")) {
-        valuesFromDB = valuesFromDB.split("\\.")[0];
-    }
-
-    // Define the correct formatter
-    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy h:mm:ss a");
-
-    try {
-        // Parse the dates
-        LocalDateTime dateUI = LocalDateTime.parse(sortedValueUI, formatter);
-        LocalDateTime dateDB = LocalDateTime.parse(valuesFromDB, formatter);
-
-        // Compare the dates
-        if (dateUI.equals(dateDB)) {
-            reportStep("Column '" + columnName + "' sorted correctly in " + sortOrder + " order", "pass");
-        } else {
-            sortColumn.click();
-            pause(2000);
-
-            // Re-fetch the sorted value from UI after clicking
-            columnData = locateElements(Locators.XPATH, "//div[@col-id='" + columnName + "']//span[@class='ag-cell-value']");
-            for (WebElement sortData : columnData) {
-                sortedValueUI = sortData.getText();
-                System.out.println("New UI Value after click: " + sortedValueUI);
-                break;
-            }
-
-            // Fix again
-            sortedValueUI = sortedValueUI.replaceAll("(?i)(AM|PM)", " $1").trim();
-            if (sortedValueUI.contains(".")) {
-                sortedValueUI = sortedValueUI.split("\\.")[0];
-            }
-
-            // Parse again
-            dateUI = LocalDateTime.parse(sortedValueUI, formatter);
-
-            if (dateUI.equals(dateDB)) {
-                reportStep("Column '" + columnName + "' sorted correctly in " + sortOrder + " order after clicking", "pass");
-            } else {
-                reportStep("Column '" + columnName + "' NOT sorted correctly in " + sortOrder + " order", "fail");
-            }
-        }
-    } catch (Exception e) {
-        e.printStackTrace();
-        reportStep("Failed to parse or compare dates for column '" + columnName + "'", "fail");
-    }
-
-    return this;
+// Step 4: Compare original and sorted list
+if (columnValues.equals(sortedColumnValues)) {
+    System.out.println("Column is sorted in ascending order.");
+} else {
+    System.out.println("Column is NOT sorted in ascending order.");
 }
