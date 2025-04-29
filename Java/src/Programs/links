@@ -1,20 +1,55 @@
-// Step 1: Retrieve column values
-List<WebElement> elementsBeforeSort = getDriver()
-    .findElements(By.xpath("//div[@id='program']//span[@class='ag-cell-value']"));
+public GlobalSearchPage sortAlphapetcolumns(String columnName) {
+    // Perform sort action
+    WebElement columnHeader = getDriver().findElement(By.xpath("//div[@col-id='" + columnName + "' and @role='columnheader']"));
+    columnHeader.click();
 
-// Step 2: Extract text from each element
-List<String> columnValues = new ArrayList<>();
-for (WebElement element : elementsBeforeSort) {
-    columnValues.add(element.getText().trim()); // trim to avoid leading spaces
+    // Step 1: Retrieve column values
+    List<WebElement> elementsBeforeSort = getDriver()
+            .findElements(By.xpath("//div[@id='program']//span[@class='ag-cell-value']"));
+
+    // Step 2: Extract text from each element
+    List<String> columnValues = new ArrayList<>();
+    for (WebElement element : elementsBeforeSort) {
+        columnValues.add(element.getText().trim()); // trim to avoid leading spaces
+    }
+
+    // Step 3: Verify if the column is sorted in ascending order
+    boolean isSorted = isAlphabeticallySorted(columnValues);
+    
+    if (!isSorted) {
+        throw new AssertionError("Column is not sorted in ascending alphabetical order");
+    }
+
+    return this;
 }
 
-// Step 3: Create a sorted copy of the column values
-List<String> sortedColumnValues = new ArrayList<>(columnValues);
-Collections.sort(sortedColumnValues, String.CASE_INSENSITIVE_ORDER); // or use Comparator.naturalOrder()
+private boolean isAlphabeticallySorted(List<String> values) {
+    if (values.isEmpty() || values.size() == 1) {
+        return true; // empty or single-element list is considered sorted
+    }
 
-// Step 4: Compare original and sorted list
-if (columnValues.equals(sortedColumnValues)) {
-    System.out.println("Column is sorted in ascending order.");
-} else {
-    System.out.println("Column is NOT sorted in ascending order.");
+    // Check if the list is sorted in ascending order
+    for (int i = 0; i < values.size() - 1; i++) {
+        String current = values.get(i).toLowerCase();
+        String next = values.get(i + 1).toLowerCase();
+        
+        // Skip empty strings if any
+        if (current.isEmpty() || next.isEmpty()) {
+            continue;
+        }
+        
+        // Compare the first characters
+        if (current.charAt(0) > next.charAt(0)) {
+            return false;
+        } else if (current.charAt(0) < next.charAt(0)) {
+            continue; // correct order, continue checking
+        } else {
+            // If first characters are equal, compare the full strings
+            if (current.compareTo(next) > 0) {
+                return false;
+            }
+        }
+    }
+    
+    return true;
 }
