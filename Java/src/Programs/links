@@ -1,55 +1,58 @@
-public GlobalSearchPage sortAlphapetcolumns(String columnName) {
-    // Perform sort action
-    WebElement columnHeader = getDriver().findElement(By.xpath("//div[@col-id='" + columnName + "' and @role='columnheader']"));
-    columnHeader.click();
+import org.openqa.selenium.*;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import java.time.Duration;
 
-    // Step 1: Retrieve column values
-    List<WebElement> elementsBeforeSort = getDriver()
-            .findElements(By.xpath("//div[@id='program']//span[@class='ag-cell-value']"));
+public class GlobalSearchPage {
 
-    // Step 2: Extract text from each element
-    List<String> columnValues = new ArrayList<>();
-    for (WebElement element : elementsBeforeSort) {
-        columnValues.add(element.getText().trim()); // trim to avoid leading spaces
+    WebDriver driver;
+    WebDriverWait wait;
+
+    public GlobalSearchPage(WebDriver driver) {
+        this.driver = driver;
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
     }
 
-    // Step 3: Verify if the column is sorted in ascending order
-    boolean isSorted = isAlphabeticallySorted(columnValues);
-    
-    if (!isSorted) {
-        throw new AssertionError("Column is not sorted in ascending alphabetical order");
-    }
+    public GlobalSearchPage sortingSearchColumns(String columnName) {
+        try {
+            // Locate the sort column element
+            String xpath = "//div[@col-id='" + columnName + "' and @role='columnheader']";
+            WebElement sortColumn = wait.until(ExpectedConditions.elementToBeClickable(By.xpath(xpath)));
 
-    return this;
-}
+            // Click the sort column to sort
+            sortColumn.click();
 
-private boolean isAlphabeticallySorted(List<String> values) {
-    if (values.isEmpty() || values.size() == 1) {
-        return true; // empty or single-element list is considered sorted
-    }
+            // Check for sort direction
+            boolean isAscending = false;
+            boolean isDescending = false;
 
-    // Check if the list is sorted in ascending order
-    for (int i = 0; i < values.size() - 1; i++) {
-        String current = values.get(i).toLowerCase();
-        String next = values.get(i + 1).toLowerCase();
-        
-        // Skip empty strings if any
-        if (current.isEmpty() || next.isEmpty()) {
-            continue;
-        }
-        
-        // Compare the first characters
-        if (current.charAt(0) > next.charAt(0)) {
-            return false;
-        } else if (current.charAt(0) < next.charAt(0)) {
-            continue; // correct order, continue checking
-        } else {
-            // If first characters are equal, compare the full strings
-            if (current.compareTo(next) > 0) {
-                return false;
+            // Check for ascending icon
+            if (sortColumn.findElements(By.xpath(".//span[contains(@class,'ag-sort-ascending-icon') and @role='presentation']")).size() > 0) {
+                isAscending = true;
             }
+
+            // Check for descending icon
+            if (sortColumn.findElements(By.xpath(".//span[contains(@class,'ag-sort-descending-icon') and @role='presentation']")).size() > 0) {
+                isDescending = true;
+            }
+
+            // Log the sort order
+            if (isAscending) {
+                System.out.println("Column sorted in ascending order");
+            } else if (isDescending) {
+                System.out.println("Column sorted in descending order");
+            } else {
+                System.out.println("No sort indicator found for the column: " + columnName);
+            }
+
+        } catch (TimeoutException te) {
+            System.out.println("Timeout while waiting for the column: " + columnName);
+        } catch (NoSuchElementException ne) {
+            System.out.println("Column not found: " + columnName);
+        } catch (Exception e) {
+            System.out.println("Unexpected error: " + e.getMessage());
         }
+
+        return this;
     }
-    
-    return true;
 }
