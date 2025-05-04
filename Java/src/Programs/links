@@ -56,3 +56,66 @@ public class GlobalSearchPage {
         return this;
     }
 }
+__----------
+import org.openqa.selenium.*;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+import java.time.Duration;
+
+public class GlobalSearchPage {
+
+    WebDriver driver;
+    WebDriverWait wait;
+
+    public GlobalSearchPage(WebDriver driver) {
+        this.driver = driver;
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+    }
+
+    public GlobalSearchPage sortingSearchColumns(String columnName) {
+        try {
+            // Locate the column header
+            String columnXpath = "//div[@col-id='" + columnName + "' and @role='columnheader']";
+            WebElement sortColumn = wait.until(ExpectedConditions.elementToBeClickable(By.xpath(columnXpath)));
+
+            // Click once: should sort ascending
+            sortColumn.click();
+            Thread.sleep(1000); // Optional: let the UI update
+
+            if (isSortOrder(sortColumn, "ascending")) {
+                System.out.println("Column sorted in ascending order");
+            } else if (isSortOrder(sortColumn, "descending")) {
+                System.out.println("Column sorted in descending order");
+            } else {
+                System.out.println("No sort indicator found after first click");
+            }
+
+            // Click again: should sort descending
+            sortColumn.click();
+            Thread.sleep(1000);
+
+            if (isSortOrder(sortColumn, "descending")) {
+                System.out.println("Column sorted in descending order");
+            } else if (isSortOrder(sortColumn, "ascending")) {
+                System.out.println("Column sorted in ascending order");
+            } else {
+                System.out.println("No sort indicator found after second click");
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error sorting column: " + e.getMessage());
+        }
+
+        return this;
+    }
+
+    private boolean isSortOrder(WebElement sortColumn, String order) {
+        String iconClass = order.equalsIgnoreCase("ascending")
+            ? "ag-sort-ascending-icon"
+            : "ag-sort-descending-icon";
+
+        return sortColumn.findElements(
+            By.xpath(".//span[contains(@class,'" + iconClass + "') and @role='presentation']")
+        ).size() > 0;
+    }
+}
